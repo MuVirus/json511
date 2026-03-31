@@ -485,13 +485,15 @@ struct JsonParser final {
     string parse_string() {
         string out;
         long last_escaped_codepoint = -1;
+        // parse_string 需要直到是双引号还是单引号
+        char quote_char = str[i-1];
         while (true) {
             if (i == str.size())
                 return fail("unexpected end of input in string", "");
 
             char ch = str[i++];
 
-            if (ch == '"') {
+            if (ch == quote_char) {
                 encode_utf8(last_escaped_codepoint, out);
                 return out;
             }
@@ -563,7 +565,7 @@ struct JsonParser final {
                 out += '\r';
             } else if (ch == 't') {
                 out += '\t';
-            } else if (ch == '"' || ch == '\\' || ch == '/') {
+            } else if (ch == '"' || ch == '\'' || ch == '\\' || ch == '/') {
                 out += ch;
             } else {
                 return fail("invalid escape character " + esc(ch), "");
@@ -669,7 +671,7 @@ struct JsonParser final {
         if (ch == 'n')
             return expect("null", Json());
 
-        if (ch == '"')
+        if (ch == '"' || ch == '\'')
             return parse_string();
 
         if (ch == '{') {
@@ -679,8 +681,8 @@ struct JsonParser final {
                 return data;
 
             while (1) {
-                if (ch != '"')
-                    return fail("expected '\"' in object, got " + esc(ch));
+                if (ch != '"' && ch != '\'')
+                    return fail("expected '\"' or '\'' in object, got " + esc(ch));
 
                 string key = parse_string();
                 if (failed)
