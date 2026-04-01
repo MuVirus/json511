@@ -69,8 +69,8 @@ int main() {
         *  - C++
         *  - Python
         */
-        'skills': ['C++', 'Python'],
-        "height": .175e1
+        'skills': ['C++',   'Python', ],
+        "height": .175e1,   
     })";
     // string json5_str = "{\n\
     //     name: `Al\n\

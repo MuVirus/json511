@@ -762,6 +762,9 @@ struct JsonParser final {
                     return fail("expected ',' in object, got " + esc(ch));
 
                 ch = get_next_token();
+                if (ch == '}') {
+                    return data;
+                }
             }
             return data;
         }
@@ -785,6 +788,11 @@ struct JsonParser final {
                     return fail("expected ',' in list, got " + esc(ch));
 
                 ch = get_next_token();
+                if (ch == ']') {
+                    return data;
+                }
+                
+
                 (void)ch;
             }
             return data;
