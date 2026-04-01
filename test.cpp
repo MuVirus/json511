@@ -61,7 +61,8 @@ int main() {
     std::cout << "Json5测试" << std::endl;
     // --- JSON5 解析 ---
     string json5_str = R"({
-        name: 'Alice', /* hello */
+        name: 'Ali
+        ce', /* hello */
         "age": NaN, // hello
         "is_active": true,
         /* skills:
@@ -71,6 +72,18 @@ int main() {
         'skills': ['C++', 'Python'],
         "height": .175e1
     })";
+    // string json5_str = "{\n\
+    //     name: `Al\n\
+    //     ice`, /* hello */\n\
+    //     \"age\": NaN, // hello\n\
+    //     \"is_active\": true,\n\
+    //     /* skills:\n\
+    //     *  - C++\n\
+    //     *  - Python\n\
+    //     */\n\
+    //     'skills': ['C++', 'Python'],\n\
+    //     \"height\": .175e1\n\
+    // }";
 
     string err5;
     // 解析 JSON 字符串
