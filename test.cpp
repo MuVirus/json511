@@ -61,7 +61,7 @@ int main() {
     std::cout << "Json5测试" << std::endl;
     // --- JSON5 解析 ---
     string json5_str = R"({
-        "name": 'Alice',
+        name: 'Alice',
         "age": 30,
         "is_active": true,
         'skills': ['C++', 'Python']

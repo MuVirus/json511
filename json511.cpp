@@ -478,6 +478,27 @@ struct JsonParser final {
         }
     }
 
+    inline bool is_identifier_start(char ch) {
+        return (ch >= 'a' && ch <= 'z') 
+    || (ch >= 'A' && ch <= 'Z') 
+    || ch == '_' || ch == '$';
+    }
+
+    inline bool is_identifier_char(char ch) {
+        return is_identifier_start(ch) || (ch >= '0' && ch <= '9');
+    }
+
+    string parse_identifier() {
+        string out;
+        i--;
+        while (is_identifier_char(str[i]))
+            out += str[i++];
+        if(out.empty())
+            return fail("empty identifier", "");
+
+        return out;
+    }
+
     /* parse_string()
      *
      * Parse a string, starting at the current position.
@@ -681,10 +702,15 @@ struct JsonParser final {
                 return data;
 
             while (1) {
-                if (ch != '"' && ch != '\'')
-                    return fail("expected '\"' or '\'' in object, got " + esc(ch));
-
-                string key = parse_string();
+                string key;
+                if (ch == '"' || ch == '\'') {
+                    key = parse_string();
+                } else if(is_identifier_start(ch)) {
+                    key = parse_identifier();
+                } else {
+                    return fail("expected string or identifier in object, got " + esc(ch));
+                }
+                
                 if (failed)
                     return Json();
 
