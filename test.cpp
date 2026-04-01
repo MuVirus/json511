@@ -62,8 +62,12 @@ int main() {
     // --- JSON5 解析 ---
     string json5_str = R"({
         name: 'Alice', /* hello */
-        "age": 30, // hello
+        "age": NaN, // hello
         "is_active": true,
+        /* skills:
+        *  - C++
+        *  - Python
+        */
         'skills': ['C++', 'Python'],
         "height": .175e1
     })";

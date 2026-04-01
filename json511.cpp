@@ -605,6 +605,12 @@ struct JsonParser final {
         if (str[i] == '-' || str[i] == '+')
             i++;
 
+        // -Infinity关键字
+        if(str[i-1] == '-' && str[i] == 'I') {
+            i++;
+            return expect("Infinity", Json());  // 将-Infinity设置成默认值
+        }
+
         // 十六进制数（必须为整数）
         if (i < str.size() && str[i] == '0' && i + 1 < str.size() && (str[i+1] == 'x' || str[i+1] == 'X')) {
             i += 2;
@@ -704,10 +710,10 @@ struct JsonParser final {
         }
 
         if (ch == 'I')
-            return expect("Infinity", Json());
+            return expect("Infinity", Json());  // 将Infinity设置成默认值
 
         if (ch == 'N')
-            return expect("NaN", Json());
+            return expect("NaN", Json());   // 将NaN设置成默认值
 
         if (ch == 't')
             return expect("true", true);
