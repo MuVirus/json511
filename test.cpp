@@ -61,10 +61,11 @@ int main() {
     std::cout << "Json5测试" << std::endl;
     // --- JSON5 解析 ---
     string json5_str = R"({
-        name: 'Alice',
-        "age": 30,
+        name: 'Alice', /* hello */
+        "age": 30, // hello
         "is_active": true,
-        'skills': ['C++', 'Python']
+        'skills': ['C++', 'Python'],
+        "height": .175e1
     })";
 
     string err5;
@@ -85,6 +86,7 @@ int main() {
     cout << "姓名: " << name5 << endl;
     cout << "年龄: " << age5 << endl;
     cout << "状态: " << (is_active5 ? "激活" : "未激活") << endl;
+    cout << "身高: " << json5["height"].number_value() << endl;
     
     // 获取数组
     cout << "技能: ";

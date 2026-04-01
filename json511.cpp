@@ -601,50 +601,70 @@ struct JsonParser final {
     Json parse_number() {
         size_t start_pos = i;
 
-        if (str[i] == '-')
+        // 符号部分
+        if (str[i] == '-' || str[i] == '+')
             i++;
 
-        // Integer part
-        if (str[i] == '0') {
-            i++;
-            if (in_range(str[i], '0', '9'))
-                return fail("leading 0s not permitted in numbers");
-        } else if (in_range(str[i], '1', '9')) {
-            i++;
-            while (in_range(str[i], '0', '9'))
+        // 十六进制数（必须为整数）
+        if (i < str.size() && str[i] == '0' && i + 1 < str.size() && (str[i+1] == 'x' || str[i+1] == 'X')) {
+            i += 2;
+            size_t hexStart = i;
+            while(i < str.size() && (in_range(str[i], '0', '9') 
+                    || in_range(str[i], 'a', 'f') 
+                    || in_range(str[i], 'A', 'F'))) {
                 i++;
-        } else {
-            return fail("invalid " + esc(str[i]) + " in number");
+            }
+            if(hexStart == i)
+                return fail("invalied hex number.", "");
+            
+            return static_cast<double>(std::strtoll(str.c_str() + hexStart, nullptr, 16));
         }
 
-        if (str[i] != '.' && str[i] != 'e' && str[i] != 'E'
+        // 十进制数（整数部分）
+        bool has_digits = false;
+        if(i < str.size() && in_range(str[i], '0', '9')) {
+            has_digits = true;
+            i++;
+            while(i < str.size() && in_range(str[i], '0', '9')) {
+                i++;
+            }
+        }
+
+        // 快速整数判断
+        if (has_digits && i < str.size() && str[i] != '.' && str[i] != 'e' && str[i] != 'E'
                 && (i - start_pos) <= static_cast<size_t>(std::numeric_limits<int>::digits10)) {
             return std::atoi(str.c_str() + start_pos);
         }
 
-        // Decimal part
-        if (str[i] == '.') {
+        // 小数部分
+        if (i < str.size() && str[i] == '.') {
             i++;
-            if (!in_range(str[i], '0', '9'))
+            // 小数点后必须要有数字
+            if (i >= str.size() || !in_range(str[i], '0', '9'))
                 return fail("at least one digit required in fractional part");
 
-            while (in_range(str[i], '0', '9'))
+            while (i < str.size() && in_range(str[i], '0', '9')) {
                 i++;
+                has_digits = true;
+            }
         }
 
-        // Exponent part
-        if (str[i] == 'e' || str[i] == 'E') {
+        // 指数部分
+        if (i < str.size() && str[i] == 'e' || str[i] == 'E') {
             i++;
 
-            if (str[i] == '+' || str[i] == '-')
+            if (i < str.size() && (str[i] == '+' || str[i] == '-'))
                 i++;
 
-            if (!in_range(str[i], '0', '9'))
+            if (i >= str.size() || !in_range(str[i], '0', '9'))
                 return fail("at least one digit required in exponent");
 
-            while (in_range(str[i], '0', '9'))
+            while (i < str.size() && in_range(str[i], '0', '9'))
                 i++;
         }
+
+        if (!has_digits) 
+            return fail(" required in number", "");
 
         return std::strtod(str.c_str() + start_pos, nullptr);
     }
@@ -678,10 +698,16 @@ struct JsonParser final {
         if (failed)
             return Json();
 
-        if (ch == '-' || (ch >= '0' && ch <= '9')) {
+        if (ch == '-' || ch == '+' || ch == '.' || (ch >= '0' && ch <= '9')) {
             i--;
             return parse_number();
         }
+
+        if (ch == 'I')
+            return expect("Infinity", Json());
+
+        if (ch == 'N')
+            return expect("NaN", Json());
 
         if (ch == 't')
             return expect("true", true);

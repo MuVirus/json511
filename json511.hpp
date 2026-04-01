@@ -163,10 +163,10 @@ public:
     // Parse. If parse fails, return Json() and assign an error message to err.
     static Json parse(const std::string & in,
                       std::string & err,
-                      JsonParse strategy = JsonParse::STANDARD);
+                      JsonParse strategy = JsonParse::COMMENTS);
     static Json parse(const char * in,
                       std::string & err,
-                      JsonParse strategy = JsonParse::STANDARD) {
+                      JsonParse strategy = JsonParse::COMMENTS) {
         if (in) {
             return parse(std::string(in), err, strategy);
         } else {
