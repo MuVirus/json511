@@ -1,4 +1,12 @@
-/* Copyright (c) 2013 Dropbox, Inc.
+/* Json511 - A JSON5 Library for C++11
+ *
+ * This library is a JSON5 extension of json11, providing enhanced parsing and serialization
+ * capabilities for JSON5 format. It supports unquoted keys, single-quoted strings, multiple
+ * number formats, multiline strings, and trailing commas.
+ */
+
+/* Base Library: json11
+ * Copyright (c) 2013 Dropbox, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -19,10 +27,16 @@
  * THE SOFTWARE.
  */
 
-
-/* Json5 Version Fix
- * Copyright (c) 2026 MuVirus, Inc. 
-*/
+/* Json511 Extension
+ * Copyright (c) 2026 MuVirus, Inc.
+ *
+ * This is a JSON5 extension of json11, adding support for:
+ * - Unquoted object keys
+ * - Single-quoted strings
+ * - Multiple number formats (hex, float, scientific notation)
+ * - Multiline strings
+ * - Trailing commas
+ */
 
 #include "json511.hpp"
 #include <cassert>
@@ -816,7 +830,7 @@ Json Json::parse(const string &in, string &err, JsonParse strategy) {
 // Documented in json11.hpp
 vector<Json> Json::parse_multi(const string &in,
                                std::string::size_type &parser_stop_pos,
-                               string &err,
+                               string & err,
                                JsonParse strategy) {
     JsonParser parser { in, 0, err, false, strategy };
     parser_stop_pos = 0;

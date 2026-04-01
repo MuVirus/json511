@@ -1,6 +1,8 @@
-/* json11
+/* Json511 - A JSON5 Library for C++11
  *
- * json11 is a tiny JSON library for C++11, providing JSON parsing and serialization.
+ * This library is a JSON5 extension of json11, providing enhanced parsing and serialization
+ * capabilities for JSON5 format. It supports unquoted keys, single-quoted strings, multiple
+ * number formats, multiline strings, and trailing commas.
  *
  * The core object provided by the library is json11::Json. A Json object represents any JSON
  * value: null, bool, number (int or double), string (std::string), array (std::vector), or
@@ -27,7 +29,8 @@
  * will be exact for +/- 275 years.)
  */
 
-/* Copyright (c) 2013 Dropbox, Inc.
+/* Base Library: json11
+ * Copyright (c) 2013 Dropbox, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -46,6 +49,17 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
+ */
+
+/* Json511 Extension
+ * Copyright (c) 2026 MuVirus, Inc.
+ *
+ * This is a JSON5 extension of json11, adding support for:
+ * - Unquoted object keys
+ * - Single-quoted strings
+ * - Multiple number formats (hex, float, scientific notation)
+ * - Multiline strings
+ * - Trailing commas
  */
 
 #pragma once
