@@ -646,10 +646,6 @@ struct JsonParser final {
         // 小数部分
         if (i < str.size() && str[i] == '.') {
             i++;
-            // 小数点后必须要有数字
-            if (i >= str.size() || !in_range(str[i], '0', '9'))
-                return fail("at least one digit required in fractional part");
-
             while (i < str.size() && in_range(str[i], '0', '9')) {
                 i++;
                 has_digits = true;
@@ -657,7 +653,7 @@ struct JsonParser final {
         }
 
         // 指数部分
-        if (i < str.size() && str[i] == 'e' || str[i] == 'E') {
+        if (i < str.size() && (str[i] == 'e' || str[i] == 'E')) {
             i++;
 
             if (i < str.size() && (str[i] == '+' || str[i] == '-'))

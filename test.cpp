@@ -1,131 +1,232 @@
+#include "json511.hpp"
 #include <iostream>
 #include <string>
-#include <vector>
-#include "json511.hpp"
 
 using namespace json11;
-using namespace std;
+
+// 测试结果结构体
+struct TestResult {
+    std::string test_name;
+    bool passed;
+    std::string error_message;
+    int line_number;
+    std::string test_case;
+};
+
+// 测试函数模板
+template<typename T>
+TestResult test(const std::string& test_name, const std::string& json_str, T expected, int line = __LINE__, const std::string& test_case = "") {
+    std::string err;
+    Json json = Json::parse(json_str, err);
+    
+    if (!err.empty()) {
+        return {test_name, false, "解析错误: " + err, line, test_case};
+    }
+    
+    if (json != Json(expected)) {
+        return {test_name, false, "值不匹配: 期望 " + Json(expected).dump() + ", 实际 " + json.dump(), line, test_case};
+    }
+    
+    return {test_name, true, "", line, test_case};
+}
+
+// 辅助宏，用于记录行号和测试用例
+#define TEST_CASE(name, json_str, expected) test(name, json_str, expected, __LINE__, #json_str)
+#define ASSERT_TRUE(condition, name, message) (condition) ? TestResult{name, true, "", __LINE__, #condition} : TestResult{name, false, message, __LINE__, #condition}
+#define ASSERT_EQ(actual, expected, name, message) ((actual) == (expected)) ? TestResult{name, true, "", __LINE__, #actual " == " #expected} : TestResult{name, false, message, __LINE__, #actual " == " #expected}
+
+// 测试对象键名可以不加引号
+TestResult test_unquoted_keys() {
+    std::string json_str = R"({
+        name: "John",
+        age: 30,
+        active: true
+    })";
+    
+    std::string err;
+    Json json = Json::parse(json_str, err);
+    
+    if (!err.empty()) {
+        return {"对象键名可以不加引号", false, "解析错误: " + err, __LINE__, json_str};
+    }
+    
+    auto result1 = ASSERT_EQ(json["name"].string_value(), "John", "对象键名可以不加引号", "name字段值不匹配");
+    if (!result1.passed) return result1;
+    
+    auto result2 = ASSERT_EQ(json["age"].int_value(), 30, "对象键名可以不加引号", "age字段值不匹配");
+    if (!result2.passed) return result2;
+    
+    auto result3 = ASSERT_EQ(json["active"].bool_value(), true, "对象键名可以不加引号", "active字段值不匹配");
+    if (!result3.passed) return result3;
+    
+    return {"对象键名可以不加引号", true, "", __LINE__, "所有字段验证通过"};
+}
+
+// 测试字符串可以用单引号
+TestResult test_single_quoted_strings() {
+    std::string json_str = R"({
+        'name': 'John',
+        "age": 30,
+        'active': true
+    })";
+    
+    std::string err;
+    Json json = Json::parse(json_str, err);
+    
+    if (!err.empty()) {
+        return {"字符串可以用单引号", false, "解析错误: " + err, __LINE__, json_str};
+    }
+    
+    auto result1 = ASSERT_EQ(json["name"].string_value(), "John", "字符串可以用单引号", "name字段值不匹配");
+    if (!result1.passed) return result1;
+    
+    auto result2 = ASSERT_EQ(json["age"].int_value(), 30, "字符串可以用单引号", "age字段值不匹配");
+    if (!result2.passed) return result2;
+    
+    auto result3 = ASSERT_EQ(json["active"].bool_value(), true, "字符串可以用单引号", "active字段值不匹配");
+    if (!result3.passed) return result3;
+    
+    return {"字符串可以用单引号", true, "", __LINE__, "所有字段验证通过"};
+}
+
+// 测试数字支持多种格式
+TestResult test_number_formats() {
+    std::string json_str = R"({
+        decimal: 123,
+        hex: 0x1A,
+        float: 123.45,
+        scientific: 1.23e2,
+        negative: -456,
+        pointEnd: 100.,
+        pointStart: .100,
+    })";
+    
+    std::string err;
+    Json json = Json::parse(json_str, err);
+    
+    if (!err.empty()) {
+        return {"数字支持多种格式", false, "解析错误: " + err, __LINE__, json_str};
+    }
+    
+    auto result1 = ASSERT_EQ(json["decimal"].int_value(), 123, "数字支持多种格式", "decimal字段值不匹配");
+    if (!result1.passed) return result1;
+    
+    auto result2 = ASSERT_EQ(json["hex"].int_value(), 26, "数字支持多种格式", "hex字段值不匹配");
+    if (!result2.passed) return result2;
+    
+    auto result3 = ASSERT_EQ(json["float"].number_value(), 123.45, "数字支持多种格式", "float字段值不匹配");
+    if (!result3.passed) return result3;
+    
+    auto result4 = ASSERT_EQ(json["scientific"].number_value(), 123, "数字支持多种格式", "scientific字段值不匹配");
+    if (!result4.passed) return result4;
+    
+    auto result5 = ASSERT_EQ(json["negative"].int_value(), -456, "数字支持多种格式", "negative字段值不匹配");
+    if (!result5.passed) return result5;
+
+    auto result6 = ASSERT_EQ(json["pointEnd"].number_value(), 100, "数字支持多种格式", "pointEnd字段值不匹配");
+    if (!result6.passed) return result6;
+
+    auto result7 = ASSERT_EQ(json["pointStart"].number_value(), 0.1, "数字支持多种格式", "pointEnd字段值不匹配");
+    if (!result7.passed) return result7;
+
+    return {"数字支持多种格式", true, "", __LINE__, "所有字段验证通过"};
+}
+
+// 测试字符串支持换行
+TestResult test_multiline_strings() {
+    std::string json_str = R"({
+        text: 'Line 1
+Line 2
+Line 3'
+    })";
+    
+    std::string err;
+    Json json = Json::parse(json_str, err);
+    
+    if (!err.empty()) {
+        return {"字符串支持换行", false, "解析错误: " + err, __LINE__, json_str};
+    }
+    
+    auto result = ASSERT_EQ(json["text"].string_value(), "Line 1\nLine 2\nLine 3", "字符串支持换行", "text字段值不匹配");
+    if (!result.passed) return result;
+    
+    return {"字符串支持换行", true, "", __LINE__, "所有字段验证通过"};
+}
+
+// 测试尾随逗号
+TestResult test_trailing_commas() {
+    std::string json_str = R"({
+        name: "John",
+        age: 30,
+        active: true,
+    })";
+    
+    std::string err;
+    Json json = Json::parse(json_str, err);
+    
+    if (!err.empty()) {
+        return {"尾随逗号", false, "解析错误: " + err, __LINE__, json_str};
+    }
+    
+    auto result1 = ASSERT_EQ(json["name"].string_value(), "John", "尾随逗号", "name字段值不匹配");
+    if (!result1.passed) return result1;
+    
+    auto result2 = ASSERT_EQ(json["age"].int_value(), 30, "尾随逗号", "age字段值不匹配");
+    if (!result2.passed) return result2;
+    
+    auto result3 = ASSERT_EQ(json["active"].bool_value(), true, "尾随逗号", "active字段值不匹配");
+    if (!result3.passed) return result3;
+    
+    // 测试数组中的尾随逗号
+    std::string array_str = R"([1, 2, 3,])";
+    Json array = Json::parse(array_str, err);
+    
+    if (!err.empty()) {
+        return {"尾随逗号", false, "数组解析错误: " + err, __LINE__, array_str};
+    }
+    
+    auto result4 = ASSERT_EQ(array.array_items().size(), 3u, "尾随逗号", "数组长度不匹配");
+    if (!result4.passed) return result4;
+    
+    auto result5 = ASSERT_EQ(array[0].int_value(), 1, "尾随逗号", "数组第一个元素值不匹配");
+    if (!result5.passed) return result5;
+    
+    auto result6 = ASSERT_EQ(array[1].int_value(), 2, "尾随逗号", "数组第二个元素值不匹配");
+    if (!result6.passed) return result6;
+    
+    auto result7 = ASSERT_EQ(array[2].int_value(), 3, "尾随逗号", "数组第三个元素值不匹配");
+    if (!result7.passed) return result7;
+    
+    return {"尾随逗号", true, "", __LINE__, "所有字段验证通过"};
+}
 
 int main() {
-
-    std::cout << "Json标准测试" << std::endl;
-    // --- 标准JSON 解析 ---
-    string json_str = R"({
-        "name": "Alice",
-        "age": 30,
-        "is_active": true,
-        "skills": ["C++", "Python"]
-    })";
-
-    string err;
-    // 解析 JSON 字符串
-    Json json = Json::parse(json_str, err);
-
-    if (!err.empty()) {
-        cerr << "解析错误: " << err << endl;
-        return 1;
+    std::vector<TestResult> results;
+    
+    // 运行所有测试
+    results.push_back(test_unquoted_keys());
+    results.push_back(test_single_quoted_strings());
+    results.push_back(test_number_formats());
+    results.push_back(test_multiline_strings());
+    results.push_back(test_trailing_commas());
+    
+    // 输出测试结果
+    std::cout << "===== Json511 单元测试结果 =====" << std::endl;
+    int passed_count = 0;
+    
+    for (const auto& result : results) {
+        if (result.passed) {
+            std::cout << "✅ " << result.test_name << " - 通过" << std::endl;
+            passed_count++;
+        } else {
+            std::cout << "❌ " << result.test_name << " - 失败" << std::endl;
+            std::cout << "   错误信息: " << result.error_message << std::endl;
+            std::cout << "   行号: " << result.line_number << std::endl;
+            std::cout << "   测试用例: " << result.test_case << std::endl;
+        }
     }
-
-    // 获取值
-    string name = json["name"].string_value();
-    int age = json["age"].int_value();
-    bool is_active = json["is_active"].bool_value();
     
-    cout << "--- 解析结果 ---" << endl;
-    cout << "姓名: " << name << endl;
-    cout << "年龄: " << age << endl;
-    cout << "状态: " << (is_active ? "激活" : "未激活") << endl;
+    std::cout << "\n测试总结: " << passed_count << "/" << results.size() << " 个测试通过" << std::endl;
     
-    // 获取数组
-    cout << "技能: ";
-    for (const auto &skill : json["skills"].array_items()) {
-        cout << skill.string_value() << " ";
-    }
-    cout << endl << endl;
-
-    // json生成
-    Json json_to_dump = Json::object {
-        { "id", 101 },
-        { "project", "Json11Test" },
-        { "completed", true },
-        { "tags", Json::array { "json", "cpp", "test" } }
-    };
-
-    // 将对象转回字符串 (dump())
-    string output_str = json_to_dump.dump();
-    
-    cout << "--- 生成结果 ---" << endl;
-    cout << output_str << endl;
-
-    std::cout << std::endl;
-    std::cout << "Json5测试" << std::endl;
-    // --- JSON5 解析 ---
-    string json5_str = R"({
-        name: 'Ali
-        ce', /* hello */
-        "age": NaN, // hello
-        "is_active": true,
-        /* skills:
-        *  - C++
-        *  - Python
-        */
-        'skills': ['C++',   'Python', ],
-        "height": .175e1,   
-    })";
-    // string json5_str = "{\n\
-    //     name: `Al\n\
-    //     ice`, /* hello */\n\
-    //     \"age\": NaN, // hello\n\
-    //     \"is_active\": true,\n\
-    //     /* skills:\n\
-    //     *  - C++\n\
-    //     *  - Python\n\
-    //     */\n\
-    //     'skills': ['C++', 'Python'],\n\
-    //     \"height\": .175e1\n\
-    // }";
-
-    string err5;
-    // 解析 JSON 字符串
-    Json json5 = Json::parse(json5_str, err5);
-
-    if (!err5.empty()) {
-        cerr << "解析错误: " << err5 << endl;
-        return 1;
-    }
-
-    // 获取值
-    string name5 = json5["name"].string_value();
-    int age5 = json5["age"].int_value();
-    bool is_active5 = json5["is_active"].bool_value();
-    
-    cout << "--- 解析结果 ---" << endl;
-    cout << "姓名: " << name5 << endl;
-    cout << "年龄: " << age5 << endl;
-    cout << "状态: " << (is_active5 ? "激活" : "未激活") << endl;
-    cout << "身高: " << json5["height"].number_value() << endl;
-    
-    // 获取数组
-    cout << "技能: ";
-    for (const auto &skill : json5["skills"].array_items()) {
-        cout << skill.string_value() << " ";
-    }
-    cout << endl << endl;
-
-    // json生成
-    Json json_to_dump5 = Json::object {
-        { "id", 101 },
-        { "project", "Json11Test" },
-        { "completed", true },
-        { "tags", Json::array { "json", "cpp", "test" } }
-    };
-
-    // 将对象转回字符串 (dump())
-    string output_str5 = json_to_dump5.dump();
-    
-    cout << "--- 生成结果 ---" << endl;
-    cout << output_str5 << endl;
-
-
-    return 0;
-} 
+    return passed_count == results.size() ? 0 : 1;
+}
